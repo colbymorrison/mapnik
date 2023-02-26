@@ -45,6 +45,7 @@
 #include <mapnik/util/featureset_buffer.hpp>
 #include <mapnik/util/variant.hpp>
 #include <mapnik/symbolizer_dispatch.hpp>
+#include <mapnik/timer.hpp>
 
 // stl
 #include <vector>
@@ -87,6 +88,7 @@ feature_style_processor<Processor>::feature_style_processor(Map const& m, double
 template <typename Processor>
 void feature_style_processor<Processor>::apply(double scale_denom)
 {
+    // mapnik.render in Python goes to HERE via agg_renderer
     Processor & p = static_cast<Processor&>(*this);
     p.start_map_processing(m_);
 
@@ -219,6 +221,9 @@ void feature_style_processor<Processor>::prepare_layer(layer_rendering_material 
                                                        int buffer_size,
                                                        std::set<std::string>& names)
 {
+    #ifdef MAPNIK_STATS
+	mapnik::progress_timer __stats__(std::clog, "feature_style_processor::prepare_layer::" + mat.lay_.name());
+    #endif
     layer const& lay = mat.lay_;
 
     std::vector<std::string> const& style_names = lay.styles();
@@ -446,6 +451,9 @@ template <typename Processor>
 void feature_style_processor<Processor>::render_material(layer_rendering_material const & mat,
                                                          Processor & p )
 {
+    #ifdef MAPNIK_STATS
+	mapnik::progress_timer __stats__(std::clog, "feature_style_processor::render_material::" + mat.lay_.name());
+    #endif
     std::vector<feature_type_style const*> const & active_styles = mat.active_styles_;
     std::vector<featureset_ptr> const & featureset_ptr_list = mat.featureset_ptr_list_;
     if (featureset_ptr_list.empty())
